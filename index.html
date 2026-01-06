@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta name="google-site-verification" content="ICWadNm1UEY-5aRTBxc256vuceTrpLu27thxOlF7GGw" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電気計算機 | 車中泊・バンライフ・災害時のバッテリー容量シミュレーター</title>
+    <meta name="description" content="車中泊・バンライフ・災害時の備えに必要な電力を自動計算。使用家電を選ぶだけで、必要なポータブル電源やソーラーパネルの容量がわかります。">
+    <meta name="keywords" content="バンライフ,車中泊,電気,計算,ソーラーパネル,ポータブル電源,バッテリー,災害,防災,停電">
+
+    <meta property="og:title" content="電気計算機 | 車中泊・災害時の備えに">
+    <meta property="og:description" content="必要な電力を自動計算！ソーラー・バッテリー容量がすぐわかる">
+    <meta property="og:type" content="website">
+
+    <!-- AEO: WebApplication Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "電気計算機（車中泊・災害時対応）",
+        "description": "車中泊・バンライフ・災害時に必要な電力を自動計算。使用家電から必要なポータブル電源やソーラーパネルの容量を算出。",
+        "applicationCategory": "UtilityApplication",
+        "operatingSystem": "All",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "JPY"
+        },
+        "featureList": [
+            "1日の消費電力自動計算",
+            "ポータブル電源容量の提案",
+            "ソーラーパネル容量の提案",
+            "災害時必要日数の計算",
+            "よく使う家電のプリセット",
+            "スマートフォン対応"
+        ]
+    }
+    </script>
+
+    <!-- AEO: FAQPage Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "災害時に必要なポータブル電源の容量は？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "災害時の停電に備えるポータブル電源は、最低限スマホ充電とLEDライトで1日100Wh程度。冷蔵庫も使うなら1日500Wh以上が目安です。3日間の停電を想定すると、1000Wh〜2000Whクラスがおすすめです。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "車中泊に必要なポータブル電源の容量は？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "車中泊に必要なポータブル電源の容量は、使用する家電と使用時間によって異なります。スマホ充電のみなら200Wh程度、PC作業もするなら500Wh、冷蔵庫を使うなら1000Wh以上が目安です。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "ソーラーパネルは何W必要？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "ソーラーパネルの必要W数は、1日の消費電力と日照時間で決まります。日本の平均的な日照を4時間とすると、1日500Wh消費する場合、500÷4=125W以上のパネルが必要です。"
+                }
+            }
+        ]
+    }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.4s ease;
+        }
+
+        /* ===== 車中泊モード（アウトドア・ナチュラル） ===== */
+        body.vanlife {
+            background: linear-gradient(180deg, #f5f0e6 0%, #e8dcc8 100%);
+            color: #4a4a4a;
+        }
+
+        .vanlife .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #d4c4a8;
+        }
+
+        .vanlife h1 {
+            color: #5d7a3d;
+        }
+
+        .vanlife .subtitle {
+            color: #7a6b52;
+        }
+
+        .vanlife .mode-tab {
+            background: rgba(255, 255, 255, 0.6);
+            color: #6b5d45;
+            border-color: transparent;
+        }
+
+        .vanlife .mode-tab.active {
+            background: #5d7a3d;
+            color: white;
+            border-color: #5d7a3d;
+        }
+
+        .vanlife .section-title {
+            color: #5d7a3d;
+            border-color: #d4c4a8;
+        }
+
+        .vanlife .appliance-item {
+            background: rgba(93, 122, 61, 0.08);
+        }
+
+        .vanlife .appliance-watts {
+            color: #7a6b52;
+        }
+
+        .vanlife .appliance-hours input {
+            background: white;
+            border-color: #d4c4a8;
+            color: #4a4a4a;
+        }
+
+        .vanlife .appliance-hours input:focus {
+            border-color: #5d7a3d;
+        }
+
+        .vanlife .appliance-wh {
+            color: #5d7a3d;
+        }
+
+        .vanlife .custom-section {
+            background: rgba(93, 122, 61, 0.06);
+            border-color: rgba(93, 122, 61, 0.2);
+        }
+
+        .vanlife .custom-title {
+            color: #5d7a3d;
+        }
+
+        .vanlife .custom-help {
+            color: #7a6b52;
+        }
+
+        .vanlife .custom-field label {
+            color: #6b5d45;
+        }
+
+        .vanlife .custom-field input {
+            background: white;
+            border-color: #d4c4a8;
+            color: #4a4a4a;
+        }
+
+        .vanlife .btn-add {
+            background: #5d7a3d;
+            color: white;
+        }
+
+        .vanlife .btn-add:hover {
+            background: #4a6330;
+        }
+
+        .vanlife .result-box {
+            background: linear-gradient(135deg, rgba(93, 122, 61, 0.15) 0%, rgba(93, 122, 61, 0.08) 100%);
+            border-color: rgba(93, 122, 61, 0.3);
+        }
+
+        .vanlife .result-title {
+            color: #5d7a3d;
+        }
+
+        .vanlife .result-number {
+            color: #5d7a3d;
+        }
+
+        .vanlife .result-unit {
+            color: #7a9a4d;
+        }
+
+        .vanlife .rec-card {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .vanlife .rec-label {
+            color: #6b5d45;
+        }
+
+        .vanlife .rec-value {
+            color: #4a4a4a;
+        }
+
+        .vanlife .rec-note {
+            color: #999;
+        }
+
+        .vanlife .btn-clear {
+            background: #a89880;
+        }
+
+        .vanlife .btn-clear:hover {
+            background: #8a7a62;
+        }
+
+        .vanlife .affiliate-link {
+            background: linear-gradient(135deg, #5d7a3d 0%, #4a6330 100%);
+        }
+
+        /* ===== 災害対策モード（やさしい・安心） ===== */
+        body.disaster {
+            background: linear-gradient(180deg, #f0f4f8 0%, #e3eaf2 100%);
+            color: #4a5568;
+        }
+
+        .disaster .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #cbd5e0;
+        }
+
+        .disaster h1 {
+            color: #4a7c9b;
+        }
+
+        .disaster .subtitle {
+            color: #718096;
+        }
+
+        .disaster .mode-tab {
+            background: rgba(255, 255, 255, 0.6);
+            color: #718096;
+            border-color: transparent;
+        }
+
+        .disaster .mode-tab.active {
+            background: #4a7c9b;
+            color: white;
+            border-color: #4a7c9b;
+        }
+
+        .disaster .section-title {
+            color: #4a7c9b;
+            border-color: #cbd5e0;
+        }
+
+        .disaster .appliance-item {
+            background: rgba(74, 124, 155, 0.06);
+        }
+
+        .disaster .appliance-watts {
+            color: #718096;
+        }
+
+        .disaster .appliance-hours input {
+            background: white;
+            border-color: #cbd5e0;
+            color: #4a5568;
+        }
+
+        .disaster .appliance-hours input:focus {
+            border-color: #4a7c9b;
+        }
+
+        .disaster .appliance-wh {
+            color: #4a7c9b;
+        }
+
+        .disaster .custom-section {
+            background: rgba(74, 124, 155, 0.05);
+            border-color: rgba(74, 124, 155, 0.2);
+        }
+
+        .disaster .custom-title {
+            color: #4a7c9b;
+        }
+
+        .disaster .custom-help {
+            color: #718096;
+        }
+
+        .disaster .custom-field label {
+            color: #718096;
+        }
+
+        .disaster .custom-field input {
+            background: white;
+            border-color: #cbd5e0;
+            color: #4a5568;
+        }
+
+        .disaster .btn-add {
+            background: #4a7c9b;
+            color: white;
+        }
+
+        .disaster .btn-add:hover {
+            background: #3d6a85;
+        }
+
+        .disaster .result-box {
+            background: linear-gradient(135deg, rgba(74, 124, 155, 0.12) 0%, rgba(74, 124, 155, 0.06) 100%);
+            border-color: rgba(74, 124, 155, 0.25);
+        }
+
+        .disaster .result-title {
+            color: #4a7c9b;
+        }
+
+        .disaster .result-number {
+            color: #4a7c9b;
+        }
+
+        .disaster .result-unit {
+            color: #6a9cb8;
+        }
+
+        .disaster .rec-card {
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        .disaster .rec-label {
+            color: #718096;
+        }
+
+        .disaster .rec-value {
+            color: #4a5568;
+        }
+
+        .disaster .rec-note {
+            color: #a0aec0;
+        }
+
+        .disaster .days-card {
+            background: rgba(129, 178, 154, 0.15);
+            border: 1px solid rgba(129, 178, 154, 0.3);
+        }
+
+        .disaster .days-card .rec-value {
+            color: #4a9b7c;
+        }
+
+        .disaster .btn-clear {
+            background: #a0aec0;
+        }
+
+        .disaster .btn-clear:hover {
+            background: #8a9ab0;
+        }
+
+        .disaster .affiliate-link {
+            background: linear-gradient(135deg, #4a7c9b 0%, #3d6a85 100%);
+        }
+
+        /* ===== 共通スタイル ===== */
+        .container {
+            padding: 28px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            font-size: 22px;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 14px 10px;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .mode-tab:hover {
+            transform: translateY(-2px);
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 25px 0 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+        }
+
+        .appliance-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .appliance-item {
+            display: grid;
+            grid-template-columns: 1fr 55px 65px 65px;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .appliance-item:hover {
+            transform: translateX(3px);
+        }
+
+        .appliance-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .appliance-watts {
+            font-size: 12px;
+            text-align: right;
+        }
+
+        .appliance-hours input {
+            width: 100%;
+            padding: 10px 6px;
+            border: 2px solid;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .appliance-wh {
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .appliance-header {
+            background: transparent !important;
+            padding: 8px 14px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+            margin-bottom: 5px;
+        }
+
+        .appliance-header .appliance-name,
+        .appliance-header .appliance-watts,
+        .appliance-header .appliance-hours-label,
+        .appliance-header .appliance-wh {
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.7;
+        }
+
+        .appliance-hours-label {
+            text-align: center;
+        }
+
+        .custom-section {
+            margin-top: 25px;
+            padding: 18px;
+            border-radius: 14px;
+            border: 2px dashed;
+        }
+
+        .custom-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .custom-help {
+            font-size: 12px;
+            margin-bottom: 15px;
+            line-height: 1.7;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .custom-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .custom-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .custom-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .custom-field label {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .custom-field input {
+            padding: 12px;
+            border: 2px solid;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .custom-field input::placeholder {
+            opacity: 0.5;
+        }
+
+        .btn-add {
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-box {
+            margin-top: 30px;
+            padding: 28px;
+            border-radius: 16px;
+            border: 2px solid;
+        }
+
+        .result-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-main {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .result-number {
+            font-size: 52px;
+            font-weight: 800;
+        }
+
+        .result-unit {
+            font-size: 18px;
+            margin-left: 5px;
+        }
+
+        .recommendations {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .rec-card {
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .rec-label {
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .rec-value {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .rec-note {
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .days-card {
+            grid-column: 1 / -1;
+        }
+
+        .btn-clear {
+            width: 100%;
+            padding: 16px;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+
+        .btn-clear:hover {
+            transform: translateY(-2px);
+        }
+
+        .affiliate-area {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .affiliate-link {
+            display: inline-block;
+            text-decoration: none;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            margin: 6px;
+            transition: all 0.2s;
+        }
+
+        .affiliate-link:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .note {
+            font-size: 11px;
+            color: #999;
+            margin-top: 25px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        /* アニメーション */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .appliance-item {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="vanlife">
+
+    <div class="container">
+        <h1 id="mainTitle">🚐 電気計算機</h1>
+        <p class="subtitle" id="mainSubtitle">車中泊・アウトドアの電力計画に</p>
+
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="setMode('vanlife')">🚐 車中泊・バンライフ</button>
+            <button class="mode-tab" onclick="setMode('disaster')">🏠 災害・停電対策</button>
+        </div>
+
+        <div class="section-title">📱 使用する家電と時間（1日あたり）</div>
+
+        <div class="appliance-list" id="applianceList">
+            <!-- 家電リストはJSで生成 -->
+        </div>
+
+        <div class="custom-section">
+            <div class="custom-title">✏️ 自分で家電を追加</div>
+            <div class="custom-help">
+                💡 消費電力（W）は家電の本体や説明書に書いてあります<br>
+                例）ドライヤー 1200W、電気毛布 50W、モバイルWiFi 10W
+            </div>
+            <div class="custom-form">
+                <div class="custom-row">
+                    <div class="custom-field">
+                        <label>家電の名前</label>
+                        <input type="text" id="customName" placeholder="例: テレビ">
+                    </div>
+                    <div class="custom-field">
+                        <label>消費電力（W）</label>
+                        <input type="number" id="customWatts" placeholder="例: 100" min="0">
+                    </div>
+                </div>
+                <div class="custom-field">
+                    <label>1日に使う時間</label>
+                    <input type="number" id="customHours" placeholder="例: 3" min="0" step="0.5">
+                </div>
+                <button class="btn-add" onclick="addCustomAppliance()">＋ 追加する</button>
+            </div>
+        </div>
+
+        <button class="btn-clear" onclick="clearAll()">クリア</button>
+
+        <div class="result-box" id="resultArea">
+            <div class="result-title">1日の消費電力</div>
+            <div class="result-main">
+                <span class="result-number" id="totalWh">0</span>
+                <span class="result-unit">Wh/日</span>
+            </div>
+
+            <div class="recommendations">
+                <div class="rec-card">
+                    <div class="rec-label">🔋 おすすめバッテリー</div>
+                    <div class="rec-value" id="recBattery">-</div>
+                    <div class="rec-note">消費量の約2倍</div>
+                </div>
+                <div class="rec-card">
+                    <div class="rec-label">☀️ おすすめソーラー</div>
+                    <div class="rec-value" id="recSolar">-</div>
+                    <div class="rec-note">日照4時間で計算</div>
+                </div>
+                <div class="rec-card days-card" id="daysCard" style="display:none;">
+                    <div class="rec-label">⏱️ 1000Whバッテリーで使える目安</div>
+                    <div class="rec-value" id="recDays">-</div>
+                    <div class="rec-note">ゆとりをもって準備しておくと安心です</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="affiliate-area" id="affiliateArea" style="display:none;">
+            <a href="https://www.amazon.co.jp/s?k=ポータブル電源&tag=YOUR_ID" target="_blank" class="affiliate-link">
+                Amazonでポータブル電源を探す ➔
+            </a>
+            <a href="https://www.amazon.co.jp/s?k=ソーラーパネル+ポータブル&tag=YOUR_ID" target="_blank" class="affiliate-link">
+                ソーラーパネルを探す ➔
+            </a>
+        </div>
+
+        <p class="note">
+            ※計算結果は目安です。実際の電力消費は使用環境により異なります。<br>
+            ※バッテリーは放電深度80%、ソーラーは日照4時間で計算しています。
+        </p>
+    </div>
+
+    <script>
+        // モード別プリセット家電リスト
+        const vanlifeAppliances = [
+            { name: 'スマートフォン充電', watts: 15 },
+            { name: 'ノートPC', watts: 60 },
+            { name: 'LEDライト', watts: 10 },
+            { name: 'USB扇風機', watts: 5 },
+            { name: 'AC扇風機', watts: 30 },
+            { name: '車載冷蔵庫（小型）', watts: 45 },
+            { name: '車載冷蔵庫（大型）', watts: 60 },
+            { name: '電気ケトル', watts: 1000 },
+            { name: 'IHクッキングヒーター', watts: 1400 },
+            { name: '電気毛布', watts: 50 },
+            { name: 'ドライヤー', watts: 1200 },
+        ];
+
+        const disasterAppliances = [
+            { name: 'スマートフォン充電', watts: 15 },
+            { name: 'ノートPC・タブレット', watts: 60 },
+            { name: 'LEDライト', watts: 10 },
+            { name: '携帯ラジオ', watts: 3 },
+            { name: 'モバイルWiFi', watts: 10 },
+            { name: '扇風機', watts: 30 },
+            { name: '小型冷蔵庫', watts: 45 },
+            { name: '電気ケトル', watts: 1000 },
+            { name: '電気毛布', watts: 50 },
+            { name: '医療機器（CPAP等）', watts: 30 },
+        ];
+
+        let currentMode = 'vanlife';
+        let customAppliances = [];
+
+        function setMode(mode) {
+            currentMode = mode;
+            customAppliances = [];
+
+            // テーマ切り替え
+            document.body.className = mode;
+
+            // タブ切り替え
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.mode-tab[onclick="setMode('${mode}')"]`).classList.add('active');
+
+            // タイトル・サブタイトル変更
+            if (mode === 'vanlife') {
+                document.getElementById('mainTitle').textContent = '🚐 電気計算機';
+                document.getElementById('mainSubtitle').textContent = '車中泊・アウトドアの電力計画に';
+            } else {
+                document.getElementById('mainTitle').textContent = '🏠 電気計算機';
+                document.getElementById('mainSubtitle').textContent = 'いざという時の備えを確認しましょう';
+            }
+
+            // 災害モードでは日数カードを表示
+            document.getElementById('daysCard').style.display = mode === 'disaster' ? 'block' : 'none';
+
+            renderApplianceList();
+            calculate();
+        }
+
+        function getPresetAppliances() {
+            return currentMode === 'vanlife' ? vanlifeAppliances : disasterAppliances;
+        }
+
+        function renderApplianceList() {
+            const container = document.getElementById('applianceList');
+            container.innerHTML = '';
+
+            // ヘッダー行を追加
+            const header = document.createElement('div');
+            header.className = 'appliance-item appliance-header';
+            header.innerHTML = `
+                <div class="appliance-name">家電</div>
+                <div class="appliance-watts">消費電力</div>
+                <div class="appliance-hours-label">使用時間</div>
+                <div class="appliance-wh">消費量</div>
+            `;
+            container.appendChild(header);
+
+            const presets = getPresetAppliances();
+            const allAppliances = [...presets, ...customAppliances];
+
+            allAppliances.forEach((appliance, index) => {
+                const item = document.createElement('div');
+                item.className = 'appliance-item';
+                item.style.animationDelay = `${index * 0.03}s`;
+                item.innerHTML = `
+                    <div class="appliance-name">${appliance.name}</div>
+                    <div class="appliance-watts">${appliance.watts}W</div>
+                    <div class="appliance-hours">
+                        <input type="number" 
+                               id="hours-${index}" 
+                               value="0" 
+                               min="0" 
+                               max="24" 
+                               step="0.5" 
+                               placeholder="時間"
+                               oninput="calculate()">
+                    </div>
+                    <div class="appliance-wh" id="wh-${index}">0 Wh</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function calculate() {
+            const presets = getPresetAppliances();
+            const allAppliances = [...presets, ...customAppliances];
+            let totalWh = 0;
+
+            allAppliances.forEach((appliance, index) => {
+                const hoursInput = document.getElementById(`hours-${index}`);
+                const whDisplay = document.getElementById(`wh-${index}`);
+
+                if (hoursInput && whDisplay) {
+                    const hours = parseFloat(hoursInput.value) || 0;
+                    const wh = appliance.watts * hours;
+                    whDisplay.textContent = `${Math.round(wh)} Wh`;
+                    totalWh += wh;
+                }
+            });
+
+            document.getElementById('totalWh').textContent = Math.round(totalWh);
+
+            if (totalWh > 0) {
+                const recBattery = Math.ceil(totalWh * 2 / 100) * 100;
+                document.getElementById('recBattery').textContent = `${recBattery}Wh+`;
+
+                const recSolar = Math.ceil(totalWh / 4 * 1.5 / 50) * 50;
+                document.getElementById('recSolar').textContent = `${recSolar}W+`;
+
+                if (currentMode === 'disaster') {
+                    const batteryWh = 1000;
+                    const usableDays = Math.floor((batteryWh * 0.8) / totalWh * 10) / 10;
+                    document.getElementById('recDays').textContent = usableDays > 0 ? `約${usableDays}日分` : '-';
+                }
+
+                document.getElementById('affiliateArea').style.display = 'block';
+            } else {
+                document.getElementById('recBattery').textContent = '-';
+                document.getElementById('recSolar').textContent = '-';
+                document.getElementById('recDays').textContent = '-';
+                document.getElementById('affiliateArea').style.display = 'none';
+            }
+        }
+
+        function addCustomAppliance() {
+            const name = document.getElementById('customName').value.trim();
+            const watts = parseFloat(document.getElementById('customWatts').value);
+            const hours = parseFloat(document.getElementById('customHours').value) || 0;
+
+            if (!name) {
+                alert('家電の名前を入力してください');
+                return;
+            }
+            if (!watts || watts <= 0) {
+                alert('消費電力（W）を入力してください\n\n💡 家電本体や説明書に書いてあります');
+                return;
+            }
+
+            customAppliances.push({ name, watts });
+            renderApplianceList();
+
+            const presets = getPresetAppliances();
+            const newIndex = presets.length + customAppliances.length - 1;
+            setTimeout(() => {
+                const hoursInput = document.getElementById(`hours-${newIndex}`);
+                if (hoursInput && hours > 0) {
+                    hoursInput.value = hours;
+                    calculate();
+                }
+            }, 10);
+
+            document.getElementById('customName').value = '';
+            document.getElementById('customWatts').value = '';
+            document.getElementById('customHours').value = '';
+        }
+
+        function clearAll() {
+            customAppliances = [];
+            renderApplianceList();
+            calculate();
+        }
+
+        // 初期化
+        renderApplianceList();
+    </script>
+
+</body>
+
+</html>
